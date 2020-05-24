@@ -1,3 +1,4 @@
-FreeWayJS - Distributed, decentralized Social Networking module.
-Powered by Ethereum, IPFS, OrbitDB & Whisper. 
-Built with Embark Framefork and Love.
+###SoverenJS
+Javascript library for distributed, decentralized Storefront and Social Networking module.
+
+Powered by Ethereum, IPFS, OrbitDB & Whisper.

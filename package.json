@@ -6,9 +6,9 @@
   "scripts": {
     "test": "mocha"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["soveren","sovereign","ipfs","orbitdb","ethereum","store","storefront","market","drm"],
+  "author": "Viacheslav V Bogdanov",
+  "license": "MIT",
   "dependencies": {
     "ipfs": "^0.43.3",
     "mocha": "^7.1.2",
