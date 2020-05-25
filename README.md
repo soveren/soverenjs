@@ -3,6 +3,6 @@ Javascript library for serverless, distributed, decentralized Storefront and Soc
 
 Powered by Ethereum, IPFS, OrbitDB & Whisper.
 
-#### Project status
+### Project status
 
 Status: **in development**

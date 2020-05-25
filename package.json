@@ -21,7 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "ipfs": "^0.44.0",
-    "mocha": "^7.1.2",
+    "mocha": "^7.2.0",
     "orbit-db": "^0.24.1"
   }
 }

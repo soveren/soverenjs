@@ -137,7 +137,7 @@ class Soveren {
      * @returns {Promise<*>} cid
      */
     async removePost(hash, options = {}) {
-        return await this.posts.remove(hash, options)
+        return this.posts.remove(hash, options)
     }
 
     getPost(hash) {
