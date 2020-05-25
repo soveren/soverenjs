@@ -58,11 +58,10 @@ class Soveren {
     /**
      * Deletes profile's field
      * @param key
-     * @returns {Promise<*>}
+     * @returns {Promise<*>} cid
      */
     async deleteProfileField(key) {
-        const cid = await this.profile.del(key)
-        return cid
+        return await this.profile.del(key)
     }
 
     getProfileFields(uid=undefined) {
@@ -77,9 +76,14 @@ class Soveren {
         throw new Error('Incomplete')
     }
 
+    /**
+     *
+     * @param key
+     * @param value
+     * @returns {Promise<*>} cid
+     */
     async setProfileField(key, value) {
-        const cid = await this.profile.set(key, value)
-        return cid
+        return await this.profile.set(key, value)
     }
 
     async setProfileFields(fields) {
@@ -92,14 +96,22 @@ class Soveren {
 
     // Following
 
+    /**
+     *
+     * @param uid
+     * @returns {Promise<*>} cid
+     */
     async follow(uid) {
-        const cid = await this.following.set(uid, uid)
-        return cid
+        return await this.following.set(uid, uid)
     }
 
+    /**
+     *
+     * @param uid
+     * @returns {Promise<*>} cid
+     */
     async unFollow(uid) {
-        const cid = await this.following.del(uid)
-        return cid
+        return await this.following.del(uid)
     }
 
     getFollowing() {
@@ -108,14 +120,24 @@ class Soveren {
 
     // Posts
 
+    /**
+     *
+     * @param data
+     * @param options
+     * @returns {Promise<*>} cid
+     */
     async addPost(data, options = {}) {
-        const cid = await this.posts.add(data, options)
-        return cid
+        return await this.posts.add(data, options)
     }
 
+    /**
+     *
+     * @param hash
+     * @param options
+     * @returns {Promise<*>} cid
+     */
     async removePost(hash, options = {}) {
-        const cid = await this.posts.remove(hash, options)
-        return cid
+        return await this.posts.remove(hash, options)
     }
 
     getPost(hash) {
@@ -129,7 +151,7 @@ class Soveren {
     /**
      * Queries posts with an options https://github.com/orbitdb/orbit-db/blob/master/API.md#iteratoroptions-1
      * @param options
-     * @returns {void|*}
+     * @returns {void|*} Posts array
      */
     queryPosts(options) {
         return this.posts.iterator(options).collect()

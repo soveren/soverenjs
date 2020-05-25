@@ -1,5 +1,5 @@
 # SoverenJS
-Javascript library for serverless, distributed, decentralized Storefront and Social Networking module.
+Javascript library for serverless, distributed, decentralized Storefront and Social Networking.
 
 Powered by Ethereum, IPFS, OrbitDB & Whisper.
 

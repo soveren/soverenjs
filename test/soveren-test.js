@@ -113,6 +113,12 @@ describe('posts', () => {
             assert(Array.isArray(soveren.getAllPosts()))
         })
     })
+    //TODO check array length and payload
+    describe('queryPosts', () => {
+        it('should return array of posts', async () => {
+            assert(Array.isArray(soveren.queryPosts({ limit: -1 })))
+        })
+    })
 })
 
 
