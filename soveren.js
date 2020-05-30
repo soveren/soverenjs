@@ -1,5 +1,13 @@
 'use strict'
 
+// const hashCode = s => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)
+const UUIDv4 = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        let r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 class Soveren {
     /**
      * Constructs Soveren object
@@ -97,7 +105,7 @@ class Soveren {
     // Following
 
     /**
-     *
+     * Follows user
      * @param uid
      * @returns {Promise<*>} cid
      */
@@ -106,7 +114,7 @@ class Soveren {
     }
 
     /**
-     *
+     * Un-follows user
      * @param uid
      * @returns {Promise<*>} cid
      */
@@ -121,17 +129,22 @@ class Soveren {
     // Posts
 
     /**
-     *
+     * Adds a post
      * @param data
      * @param options
      * @returns {Promise<*>} cid
      */
     async addPost(data, options = {}) {
+        // add likes counter
+        const likesDbName = 'likesCounter.' + UUIDv4()
+        //TODO restrict likes by 1 per user
+        const likesDb = await this.orbitdb.counter(likesDbName, this.defaultOptions)
+        data._likesDbId = likesDb.id
         return await this.posts.add(data, options)
     }
 
     /**
-     *
+     * Removes a post
      * @param hash
      * @param options
      * @returns {Promise<*>} cid
@@ -161,13 +174,11 @@ class Soveren {
 
     //- posts
     //likePost(pid)
-    //dislikePost(pid)
-    //rePost(pid, comment)
+    //getPostLikes(pid)
     //commentPost(pid, comment)
     //getPostComments(pid)
-    //getPostLikes(pid)
-    //getPostDislikes(pid)
     //getRePosts(pid)
+    //rePost(pid, comment)
 
     //- messaging
     //sendMessage(uid, message)

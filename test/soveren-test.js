@@ -97,6 +97,9 @@ describe('posts', () => {
         it('should return text', async () => {
             assert.strictEqual(soveren.getPost(hash).payload.value.text, postData.text)
         })
+        it('should return likesDbId', async () => {
+            assert(typeof soveren.getPost(hash).payload.value._likesDbId ==='string')
+        })
     })
     describe('removePost', () => {
         it('should return cid', async () => {
