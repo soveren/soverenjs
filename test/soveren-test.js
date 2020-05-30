@@ -91,14 +91,33 @@ describe('posts', () => {
         })
     })
     describe('getPost', () => {
+        let post
+        before(()=>{
+            post = soveren.getPost(hash).payload.value
+        })
         it('should return title', async () => {
-            assert.strictEqual(soveren.getPost(hash).payload.value.title, postData.title)
+            assert.strictEqual(post.title, postData.title)
         })
         it('should return text', async () => {
-            assert.strictEqual(soveren.getPost(hash).payload.value.text, postData.text)
+            assert.strictEqual(post.text, postData.text)
         })
-        it('should return likesDbId', async () => {
-            assert(typeof soveren.getPost(hash).payload.value._likesDbId ==='string')
+        it('should return likes Db Id', async () => {
+            assert(typeof post.likesCounter ==='string')
+        })
+        it('getPostLikes should return 0', async () => {
+            assert.strictEqual(await soveren.getPostLikes(post), 0)
+        })
+        it('likePost should return cid', async () => {
+            assert(await soveren.likePost(post))
+        })
+        it('getPostLikes should return 1', async () => {
+            assert.strictEqual(await soveren.getPostLikes(post), 1)
+        })
+        it('likePost should return cid, but have no effect - user can like one post once ', async () => {
+            assert(await soveren.likePost(post))
+        })
+        it('getPostLikes still should return 1', async () => {
+            assert.strictEqual(await soveren.getPostLikes(post), 1)
         })
     })
     describe('removePost', () => {

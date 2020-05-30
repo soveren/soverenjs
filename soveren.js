@@ -139,7 +139,7 @@ class Soveren {
         const likesDbName = 'likesCounter.' + UUIDv4()
         //TODO restrict likes by 1 per user
         const likesDb = await this.orbitdb.counter(likesDbName, this.defaultOptions)
-        data._likesDbId = likesDb.id
+        data.likesCounter = likesDb.id
         return await this.posts.add(data, options)
     }
 
@@ -169,12 +169,22 @@ class Soveren {
     queryPosts(options) {
         return this.posts.iterator(options).collect()
     }
+
+    async getPostLikes(post) {
+        const counter = await this.orbitdb.counter(post.likesCounter)
+        await counter.load()
+        return counter.value
+    }
+
+    async likePost(post) {
+        const counter = await this.orbitdb.counter(post.likesCounter)
+        const cid = await counter.inc()
+        return cid
+    }
     //TODO
     //getUid()
 
     //- posts
-    //likePost(pid)
-    //getPostLikes(pid)
     //commentPost(pid, comment)
     //getPostComments(pid)
     //getRePosts(pid)
