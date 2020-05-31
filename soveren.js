@@ -13,6 +13,14 @@ class Soveren {
         this.ipfsRepo = ipfsRepo
     }
 
+    async loadFixtureData(fixtureData) {
+        const fixtureKeys = Object.keys(fixtureData)
+        for (let i in fixtureKeys) {
+            let key = fixtureKeys[i]
+            if (!this.profile.get(key)) await this.profile.set(key, fixtureData[key])
+        }
+    }
+
     /**
      * Creates and initializes Soveren node
      * @returns {Promise<Object>}
@@ -33,6 +41,7 @@ class Soveren {
             // this.node.on('ready', this._init.bind(this))
 
             await this.ipfs.start();
+
             this.orbitdb = await this.OrbitDB.createInstance(this.ipfs)
             this.defaultOptions = {write: [this.orbitdb.identity.id]}
             // console.log('orbitdb', this.orbitdb.id, this.orbitdb.id.length)
@@ -42,14 +51,19 @@ class Soveren {
 
             this.following = await this.orbitdb.kvstore('following', this.defaultOptions)
             await this.following.load()
-            await this.profile.set('following', this.following.id)
 
             this.posts = await this.orbitdb.feed('posts', this.defaultOptions)
             await this.posts.load()
-            await this.profile.set('posts', this.posts.id)
 
+            // Apply fixture data for new users
+            const peerInfo = await this.ipfs.id()
+            await this.loadFixtureData({
+                'username': 'User'+Math.floor(Math.random() * 1000000),
+                'following': this.following.id,
+                'posts': this.posts.id,
+                'nodeId': peerInfo.id
+            })
             return this
-
         } catch(e) {
             throw (e)
         }
@@ -59,14 +73,6 @@ class Soveren {
         return this.profile.id
     }
 
-    /**
-     * Deletes profile's field
-     * @param key
-     * @returns {Promise<*>} cid
-     */
-    async deleteProfileField(key) {
-        return await this.profile.del(key)
-    }
 
     getProfileFields(uid=undefined) {
         if (!uid) return this.profile.all // all own fields
@@ -96,6 +102,15 @@ class Soveren {
             cids[field] = await this.setProfileField(field, fields[field])
         }
         return cids
+    }
+
+    /**
+     * Deletes profile's field
+     * @param key
+     * @returns {Promise<*>} cid
+     */
+    async deleteProfileField(key) {
+        return await this.profile.del(key)
     }
 
     // Following
@@ -246,18 +261,13 @@ class Soveren {
      */
     async rePost(userProfileId, postHash, remark) {
         if (userProfileId===this.getProfileId()) throw new Error('You can not re post own posts')
-
+        //TODO
         const rePost = {...post, }
         await this.addPost(rePost)
         const counter = await this.orbitdb.counter(post.likesCounter)
         return await counter.inc()
     }
-    //TODO
-
-
-    //- posts
-    //getRePosts(pid)
-    //rePost(pid, comment)
+    //TODO methods:
 
     //- messaging
     //sendMessage(uid, message)
