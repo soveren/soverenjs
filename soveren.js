@@ -55,6 +55,10 @@ class Soveren {
         }
     }
 
+    getProfileId() {
+        return this.profile.id
+    }
+
     /**
      * Deletes profile's field
      * @param key
@@ -200,7 +204,7 @@ class Soveren {
     /**
      * Gets all post's comments
      * @param post
-     * @returns {Promise<LogEntry<unknown>[]>} Array of all comments
+     * @returns {Promise<LogEntry[]>} Array of all comments
      */
     async getPostComments(post) {
         const commentsDB = await this.orbitdb.feed(post.commentsFeed)
@@ -233,9 +237,16 @@ class Soveren {
         return counter.value
     }
 
-    // Re posts other person's post to own feed
-    async rePost(uid, hash, post, comment) {
-        // TODO do not re post own posts
+    /**
+     *  Re posts other person's post to own feed
+     * @param userProfileId Id of another user's profile key-value database
+     * @param postHash Hash od the post to re=post
+     * @param remark Your remark on
+     * @returns {Promise<string>}
+     */
+    async rePost(userProfileId, postHash, remark) {
+        if (userProfileId===this.getProfileId()) throw new Error('You can not re post own posts')
+
         const rePost = {...post, }
         await this.addPost(rePost)
         const counter = await this.orbitdb.counter(post.likesCounter)
@@ -243,7 +254,6 @@ class Soveren {
     }
     //TODO
 
-    //getUid()
 
     //- posts
     //getRePosts(pid)
