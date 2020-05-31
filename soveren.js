@@ -3,7 +3,7 @@
 // const hashCode = s => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)
 const UUIDv4 = () => {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        let r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
@@ -137,9 +137,19 @@ class Soveren {
     async addPost(data, options = {}) {
         // add likes counter
         const likesDbName = 'likesCounter.' + UUIDv4()
-        //TODO restrict likes by 1 per user
         const likesDb = await this.orbitdb.counter(likesDbName, this.defaultOptions)
         data.likesCounter = likesDb.id
+
+        // add re posts counter
+        const rePostsDbName = 'rePostsCounter.' + UUIDv4()
+        const rePostsDb = await this.orbitdb.counter(rePostsDbName, this.defaultOptions)
+        data.rePostsCounter = rePostsDb.id
+
+        // add comments feed
+        const commentsDbName = 'commentsFeed.' + UUIDv4()
+        const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultOptions)
+        data.commentsFeed = commentsDb.id
+
         return await this.posts.add(data, options)
     }
 
@@ -170,23 +180,70 @@ class Soveren {
         return this.posts.iterator(options).collect()
     }
 
+    /**
+     * Gets likes count of the post
+     * @param post
+     * @returns {Promise<number>} count
+     */
     async getPostLikes(post) {
         const counter = await this.orbitdb.counter(post.likesCounter)
         await counter.load()
         return counter.value
     }
 
+    /**
+     * Likes a post
+     * @param post
+     * @returns {Promise<*>} cid
+     */
     async likePost(post) {
         const counter = await this.orbitdb.counter(post.likesCounter)
-        const cid = await counter.inc()
-        return cid
+        return await counter.inc()
+    }
+
+    /**
+     * Gets all post's comments
+     * @param post
+     * @returns {Promise<LogEntry<unknown>[]>} Array of all comments
+     */
+    async getPostComments(post) {
+        const commentsDB = await this.orbitdb.feed(post.commentsFeed)
+        await commentsDB.load()
+        return commentsDB.iterator({ limit: -1 }).collect()
+    }
+
+    /**
+     * Comments a post
+     * @param post
+     * @param commentText text of the comment
+     * @param replyToCommentCid cid of the comment you want to reply
+     * @param options
+     * @returns {Promise<*>} cid
+     */
+    async commentPost(post, commentText, replyToCommentCid=undefined, options = {}) {
+        const commentsDB = await this.orbitdb.counter(post.commentsFeed)
+        const commentData = {commentText:commentText, replyToCommentCid:replyToCommentCid}
+        return await commentsDB.add(commentData, options )
+    }
+
+    async getRePostsCount(post) {
+        const counter = await this.orbitdb.counter(post.rePostsCounter)
+        await counter.load()
+        return counter.value
+    }
+
+    async rePost(uid, hash, post, comment) {
+        // TODO do not re post own posts
+        const rePost = {...post, }
+        await this.addPost(rePost)
+        const counter = await this.orbitdb.counter(post.likesCounter)
+        return await counter.inc()
     }
     //TODO
+
     //getUid()
 
     //- posts
-    //commentPost(pid, comment)
-    //getPostComments(pid)
     //getRePosts(pid)
     //rePost(pid, comment)
 

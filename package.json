@@ -20,6 +20,7 @@
   "author": "Viacheslav V Bogdanov",
   "license": "MIT",
   "dependencies": {
+    "@types/orbit-db": "git+https://github.com/orbitdb/orbit-db-types.git",
     "ipfs": "^0.44.0",
     "mocha": "^7.2.0",
     "orbit-db": "^0.24.1"
