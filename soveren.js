@@ -1,13 +1,5 @@
 'use strict'
 
-// const hashCode = s => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)
-const UUIDv4 = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
 class Soveren {
     /**
      * Constructs Soveren object
@@ -127,6 +119,10 @@ class Soveren {
     }
 
     // Posts
+    // Builds post's data to use then with addPost
+    buildPostData( title, text, coverImages=[], files=[], product=undefined) {
+        return {title:title, text:text, coverImages:coverImages, files:files, product:product}
+    }
 
     /**
      * Adds a post
@@ -136,17 +132,17 @@ class Soveren {
      */
     async addPost(data, options = {}) {
         // add likes counter
-        const likesDbName = 'likesCounter.' + UUIDv4()
+        const likesDbName = 'likesCounter.' + uuid()
         const likesDb = await this.orbitdb.counter(likesDbName, this.defaultOptions)
         data.likesCounter = likesDb.id
 
         // add re posts counter
-        const rePostsDbName = 'rePostsCounter.' + UUIDv4()
+        const rePostsDbName = 'rePostsCounter.' + uuid()
         const rePostsDb = await this.orbitdb.counter(rePostsDbName, this.defaultOptions)
         data.rePostsCounter = rePostsDb.id
 
         // add comments feed
-        const commentsDbName = 'commentsFeed.' + UUIDv4()
+        const commentsDbName = 'commentsFeed.' + uuid()
         const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultOptions)
         data.commentsFeed = commentsDb.id
 
@@ -226,12 +222,18 @@ class Soveren {
         return await commentsDB.add(commentData, options )
     }
 
+    /**
+     * Returns number of re posts
+     * @param post
+     * @returns {Promise<number>}
+     */
     async getRePostsCount(post) {
         const counter = await this.orbitdb.counter(post.rePostsCounter)
         await counter.load()
         return counter.value
     }
 
+    // Re posts other person's post to own feed
     async rePost(uid, hash, post, comment) {
         // TODO do not re post own posts
         const rePost = {...post, }
@@ -273,6 +275,7 @@ class Soveren {
 // try {
     const IpfsLibrary = require('ipfs')
     const OrbitDBLibrary = require('orbit-db')
+    const { uuid } = require('uuidv4');
 
     module.exports = exports = new Soveren(IpfsLibrary, OrbitDBLibrary)
 // } catch (e) {

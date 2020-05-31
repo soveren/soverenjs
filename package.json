@@ -24,5 +24,8 @@
     "ipfs": "^0.44.0",
     "mocha": "^7.2.0",
     "orbit-db": "^0.24.1"
+  },
+  "devDependencies": {
+    "uuidv4": "^6.1.0"
   }
 }
