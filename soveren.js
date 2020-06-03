@@ -1,8 +1,8 @@
 'use strict'
 
-class Soveren {
+class Freedom {
     /**
-     * Constructs Soveren object
+     * Constructs Freedom object
      * @param IPFS
      * @param OrbitDB
      * @param ipfsRepo path to the local IPFS repository
@@ -13,19 +13,12 @@ class Soveren {
         this.ipfsRepo = ipfsRepo
     }
 
-    async loadFixtureData(fixtureData) {
-        const fixtureKeys = Object.keys(fixtureData)
-        for (let i in fixtureKeys) {
-            let key = fixtureKeys[i]
-            if (!this.profile.get(key)) await this.profile.set(key, fixtureData[key])
-        }
-    }
-
     /**
-     * Creates and initializes Soveren node
+     * Creates and initializes Freedom node
      * @returns {Promise<Object>}
      */
     async create () {
+        if (this.created) return true
         try {
             this.ipfs = await this.IPFS.create({
                 preload: {enabled: false},
@@ -43,20 +36,67 @@ class Soveren {
             await this.ipfs.start();
 
             this.orbitdb = await this.OrbitDB.createInstance(this.ipfs)
-            this.defaultOptions = {write: [this.orbitdb.identity.id]}
+            this.defaultDbOptions = {write: [this.orbitdb.identity.id]}
             // console.log('orbitdb', this.orbitdb.id, this.orbitdb.id.length)
+            this.created = true
 
-            this.profile = await this.orbitdb.kvstore('profile', this.defaultOptions)
+            return this
+        } catch(e) {
+            throw (e)
+        }
+    }
+
+    /**
+     * Call affirm instead of create
+     * @returns {Promise<Object>}
+     */
+    async affirm() {
+        if (!this.created) return this.create()
+    }
+
+}
+class Soveren {
+    /**
+     * Constructs Soveren object
+     * @param IPFS
+     * @param OrbitDB
+     * @param ipfsRepo path to the local IPFS repository
+     */
+    constructor (freedom) {
+        this.freedom = freedom
+    }
+
+    async loadFixtureData(fixtureData) {
+        const fixtureKeys = Object.keys(fixtureData)
+        for (let i in fixtureKeys) {
+            let key = fixtureKeys[i]
+            if (!this.profile.get(key)) await this.profile.set(key, fixtureData[key])
+        }
+    }
+
+    /**
+     * Creates and initializes Soveren node
+     * @returns {Promise<Object>}
+     */
+    async create () {
+        try {
+            await this.freedom.affirm()
+            this.ipfs = this.freedom.ipfs
+            this.orbitdb = this.freedom.orbitdb
+            this.defaultDbOptions = this.freedom.defaultDbOptions
+
+            const db = this.orbitdb
+            this.profile = await db.kvstore('profile', this.defaultDbOptions)
             await this.profile.load()
 
-            this.following = await this.orbitdb.kvstore('following', this.defaultOptions)
+            this.following = await db.kvstore('following', this.defaultDbOptions)
             await this.following.load()
 
-            this.posts = await this.orbitdb.feed('posts', this.defaultOptions)
+            this.posts = await db.feed('posts', this.defaultDbOptions)
             await this.posts.load()
 
             // Apply fixture data for new users
-            const peerInfo = await this.ipfs.id()
+            const peerInfo = await this.freedom.ipfs.id()
             await this.loadFixtureData({
                 'username': 'User'+Math.floor(Math.random() * 1000000),
                 'following': this.following.id,
@@ -74,7 +114,6 @@ class Soveren {
      * @returns {string} current profile id
      */
     getUid() {
-        console.log(this.profile.id)
         return this.databaseIdToUid( this.profile.id )
     }
 
@@ -183,17 +222,17 @@ class Soveren {
     async addPost(data, options = {}) {
         // add likes counter
         const likesDbName = 'likesCounter.' + uuid()
-        const likesDb = await this.orbitdb.counter(likesDbName, this.defaultOptions)
+        const likesDb = await this.orbitdb.counter(likesDbName, this.defaultDbOptions)
         data.likesCounter = likesDb.id
 
         // add re posts counter
         const rePostsDbName = 'rePostsCounter.' + uuid()
-        const rePostsDb = await this.orbitdb.counter(rePostsDbName, this.defaultOptions)
+        const rePostsDb = await this.orbitdb.counter(rePostsDbName, this.defaultDbOptions)
         data.rePostsCounter = rePostsDb.id
 
         // add comments feed
         const commentsDbName = 'commentsFeed.' + uuid()
-        const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultOptions)
+        const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultDbOptions)
         data.commentsFeed = commentsDb.id
 
         return await this.posts.add(data, options)
@@ -321,7 +360,6 @@ class Soveren {
     //getUserDonations(uid)
     //getPostDonations(pid)
 
-
 }
 
 // try {
@@ -329,7 +367,9 @@ class Soveren {
     const OrbitDBLibrary = require('orbit-db')
     const { uuid } = require('uuidv4');
 
-    module.exports = exports = new Soveren(IpfsLibrary, OrbitDBLibrary)
+    const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
+
+    module.exports = exports = new Soveren(freedom)
 // } catch (e) {
 //     console.error(e.message)
 //     window.FW = new Soveren(window.Ipfs, window.OrbitDB)
