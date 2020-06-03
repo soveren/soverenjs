@@ -69,8 +69,31 @@ class Soveren {
         }
     }
 
+    /**
+     * Returns current profile id
+     * @returns {*|string} current profile id
+     */
     getProfileId() {
-        return this.profile.id
+        console.log(this.profile.id)
+        return this.databaseIdToProfileId( this.profile.id )
+    }
+
+    /**
+     * Warps profile id to full orbitDB database id
+     * @param profileId i.e. zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8
+     * @returns {string} database id i.e. /orbitdb/zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8/profile
+     */
+    profileIdToDatabaseId(profileId) {
+        return `/orbitdb/${profileId}/profile`
+    }
+
+    /**
+     * Shortens orbitDB database id to profile id
+     * @param databaseId i.e. /orbitdb/zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8/profile
+     * @returns {*|string} profileId zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8
+     */
+    databaseIdToProfileId(databaseId) {
+        return databaseId.split('/')[2]
     }
 
 
