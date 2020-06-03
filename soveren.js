@@ -70,29 +70,29 @@ class Soveren {
     }
 
     /**
-     * Returns current profile id
-     * @returns {*|string} current profile id
+     * Returns current user id
+     * @returns {string} current profile id
      */
-    getProfileId() {
+    getUid() {
         console.log(this.profile.id)
-        return this.databaseIdToProfileId( this.profile.id )
+        return this.databaseIdToUid( this.profile.id )
     }
 
     /**
-     * Warps profile id to full orbitDB database id
-     * @param profileId i.e. zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8
+     * Warps user id to full orbitDB database id
+     * @param {string} uid i.e. zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8
      * @returns {string} database id i.e. /orbitdb/zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8/profile
      */
-    profileIdToDatabaseId(profileId) {
-        return `/orbitdb/${profileId}/profile`
+    UidToDatabaseId(uid) {
+        return `/orbitdb/${uid}/profile`
     }
 
     /**
-     * Shortens orbitDB database id to profile id
-     * @param databaseId i.e. /orbitdb/zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8/profile
-     * @returns {*|string} profileId zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8
+     * Shortens orbitDB database id to user id (uid)
+     * @param {string} databaseId i.e. /orbitdb/zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8/profile
+     * @returns {string} profileId zdpuAxEFHh6GMHzfXNwbxMSAgSUtHSZMdxVqyYcWb659SnEX8
      */
-    databaseIdToProfileId(databaseId) {
+    databaseIdToUid(databaseId) {
         return databaseId.split('/')[2]
     }
 
@@ -161,14 +161,22 @@ class Soveren {
     }
 
     // Posts
-    // Builds post's data to use then with addPost
-    buildPostData( title, text, coverImages=[], files=[], product=undefined) {
-        return {title:title, text:text, coverImages:coverImages, files:files, product:product}
+    /**
+     * Builds post's data to use then with addPost
+     * @param {string} title post title
+     * @param {string} text post text
+     * @param {string[]} coverMedia ipfs links to cover images or video
+     * @param {string[]} files ipfs links to attached files
+     * @param {string} product product id to attach to post
+     * @returns {{product: undefined, files: *[], coverMedia: *[], text: *, title: *}}
+     */
+    buildPostData( title, text, coverMedia=[], files=[], product=undefined) {
+        return {title:title, text:text, coverMedia:coverMedia, files:files, product:product}
     }
 
     /**
      * Adds a post
-     * @param data
+     * @param data post data - prepare it with buildPostData
      * @param options
      * @returns {Promise<*>} cid
      */
@@ -282,8 +290,8 @@ class Soveren {
      * @param remark Your remark on
      * @returns {Promise<string>}
      */
-    async rePost(userProfileId, postHash, remark) {
-        if (userProfileId===this.getProfileId()) throw new Error('You can not re post own posts')
+    async rePost(uid, postHash, remark) {
+        if (uid===this.getUid()) throw new Error('You can not re post own posts')
         //TODO
         const rePost = {...post, }
         await this.addPost(rePost)
@@ -297,11 +305,6 @@ class Soveren {
     //onMessage(message)
     //getMessages(uid)
 
-    //- donation
-    //donateUser(uid)
-    //donatePost(pid)
-    //getUserDonations(uid)
-    //getPostDonations(pid)
 
     //- shop
     //addProduct(product)
@@ -311,6 +314,12 @@ class Soveren {
     //getProducts(uid)
     //getOwnProducts()
 
+
+    //- donation
+    //donateUser(uid)
+    //donatePost(pid)
+    //getUserDonations(uid)
+    //getPostDonations(pid)
 
 
 }

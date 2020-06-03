@@ -8,10 +8,10 @@ before(async function () {
 })
 
 describe('profile', () => {
-    describe('getProfileId converts back to profile.id', () => {
+    describe('getUid converts back to profile.id', () => {
         it('should converts back to profile id', async () => {
-            const pid = soveren.getProfileId()
-            assert(soveren.profileIdToDatabaseId(pid) === soveren.profile.id)
+            const pid = soveren.getUid()
+            assert(soveren.UidToDatabaseId(pid) === soveren.profile.id)
         })
     })
     describe('setProfileField name John', () => {
