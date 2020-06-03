@@ -87,7 +87,7 @@ describe('following', () => {
 })
 
 describe('posts', () => {
-    const postData = {title:'Title',   text:'Text'}
+    const postData = soveren.buildPostData('Title','Text')
     // const postData2 = {title:'Title2', text:'Text2'}
     let hash
     let delHash

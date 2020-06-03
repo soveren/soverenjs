@@ -58,9 +58,7 @@ class Freedom {
 class Soveren {
     /**
      * Constructs Soveren object
-     * @param IPFS
-     * @param OrbitDB
-     * @param ipfsRepo path to the local IPFS repository
+     * @param freedom object
      */
     constructor (freedom) {
         this.freedom = freedom
@@ -183,6 +181,7 @@ class Soveren {
      * @returns {Promise<*>} cid
      */
     async follow(uid) {
+        if(this.getUid()===uid) throw new Error('You can not follow yourself')
         return await this.following.set(uid, uid)
     }
 
@@ -207,7 +206,7 @@ class Soveren {
      * @param {string[]} coverMedia ipfs links to cover images or video
      * @param {string[]} files ipfs links to attached files
      * @param {string} product product id to attach to post
-     * @returns {{product: undefined, files: *[], coverMedia: *[], text: *, title: *}}
+     * @returns {*}
      */
     buildPostData( title, text, coverMedia=[], files=[], product=undefined) {
         return {title:title, text:text, coverMedia:coverMedia, files:files, product:product}
@@ -235,17 +234,16 @@ class Soveren {
         const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultDbOptions)
         data.commentsFeed = commentsDb.id
 
-        return await this.posts.add(data, options)
+        return await this.posts.add(data)
     }
 
     /**
      * Removes a post
      * @param hash
-     * @param options
      * @returns {Promise<*>} cid
      */
-    async removePost(hash, options = {}) {
-        return this.posts.remove(hash, options)
+    async removePost(hash) {
+        return this.posts.remove(hash)
     }
 
     getPost(hash) {
@@ -324,17 +322,18 @@ class Soveren {
 
     /**
      *  Re posts other person's post to own feed
-     * @param userProfileId Id of another user's profile key-value database
-     * @param postHash Hash od the post to re=post
-     * @param remark Your remark on
+     * @param uid user id
+     * @param postHash Hash of the post to re-post
+     * @param remark Your remark for post
      * @returns {Promise<string>}
      */
     async rePost(uid, postHash, remark) {
         if (uid===this.getUid()) throw new Error('You can not re post own posts')
         //TODO
-        const rePost = {...post, }
+        const post ={} // TODO read post
+        const rePost = {...post, remark}
         await this.addPost(rePost)
-        const counter = await this.orbitdb.counter(post.likesCounter)
+        const counter = await this.orbitdb.counter(post.rePostsCounter)
         return await counter.inc()
     }
     //TODO methods:
