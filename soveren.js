@@ -7,7 +7,7 @@ class Freedom {
      * @param OrbitDB
      * @param ipfsRepo path to the local IPFS repository
      */
-    constructor (IPFS, OrbitDB, ipfsRepo='./ipfs') {
+    constructor(IPFS, OrbitDB, ipfsRepo = './ipfs') {
         this.IPFS = IPFS
         this.OrbitDB = OrbitDB
         this.ipfsRepo = ipfsRepo
@@ -17,7 +17,7 @@ class Freedom {
      * Creates and initializes Freedom node
      * @returns {Promise<Object>}
      */
-    async create () {
+    async create() {
         if (this.created) return true
         try {
             this.ipfs = await this.IPFS.create({
@@ -26,8 +26,8 @@ class Freedom {
                 EXPERIMENTAL: {pubsub: true},
                 config: {
                     Bootstrap: [],
-                    Addresses: {Swarm: []}
-                }
+                    Addresses: {Swarm: []},
+                },
             })
 
             // this.node.on('error', (e) => { throw (e) })
@@ -41,7 +41,7 @@ class Freedom {
             this.created = true
 
             return this
-        } catch(e) {
+        } catch (e) {
             throw (e)
         }
     }
@@ -55,12 +55,13 @@ class Freedom {
     }
 
 }
+
 class Soveren {
     /**
      * Constructs Soveren object
      * @param freedom object
      */
-    constructor (freedom) {
+    constructor(freedom) {
         this.freedom = freedom
     }
 
@@ -72,11 +73,15 @@ class Soveren {
         }
     }
 
+    getTimestamp() {
+        return new Date().getTime()
+    }
+
     /**
      * Creates and initializes Soveren node
      * @returns {Promise<Object>}
      */
-    async create (uid=undefined) {
+    async create(uid = undefined) {
         try {
             await this.freedom.affirm()
             this.ipfs = this.freedom.ipfs
@@ -112,11 +117,11 @@ class Soveren {
                     'username': 'User' + Math.floor(Math.random() * 1000000),
                     'following': this.following.id,
                     'posts': this.posts.id,
-                    'nodeId': peerInfo.id
+                    'nodeId': peerInfo.id,
                 })
             }
             return this
-        } catch(e) {
+        } catch (e) {
             throw (e)
         }
     }
@@ -126,7 +131,7 @@ class Soveren {
      * @returns {string} current profile id
      */
     getUid() {
-        return this.databaseIdToUid( this.profile.id )
+        return this.databaseIdToUid(this.profile.id)
     }
 
     /**
@@ -191,7 +196,7 @@ class Soveren {
      * @returns {Promise<*>} cid
      */
     async follow(uid) {
-        if(this.getUid()===uid) throw new Error('You can not follow yourself')
+        if (this.getUid() === uid) throw new Error('You can not follow yourself')
         return await this.following.set(uid, uid)
     }
 
@@ -218,8 +223,8 @@ class Soveren {
      * @param {string} product product id to attach to post
      * @returns {*}
      */
-    buildPostData( title, text, coverMedia=[], files=[], product=undefined) {
-        return {title:title, text:text, coverMedia:coverMedia, files:files, product:product}
+    buildPostData(title, text, coverMedia = [], files = [], product = undefined) {
+        return {title: title, text: text, coverMedia: coverMedia, files: files, product: product}
     }
 
     /**
@@ -244,6 +249,8 @@ class Soveren {
         const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultDbOptions)
         data.commentsFeed = commentsDb.id
 
+        data.timestamp = this.getTimestamp()
+
         return await this.posts.add(data)
     }
 
@@ -261,7 +268,7 @@ class Soveren {
     }
 
     getAllPosts() {
-        return this.posts.iterator({ limit: -1 }).collect()
+        return this.posts.iterator({limit: -1}).collect()
     }
 
     /**
@@ -296,27 +303,30 @@ class Soveren {
 
     /**
      * Gets all post's comments
-     * @param post
+     * @param postObject
      * @returns {Promise<LogEntry[]>} Array of all comments
      */
-    async getPostComments(post) {
-        const commentsDB = await this.orbitdb.feed(post.commentsFeed)
+    async getPostComments(postObject) {
+        const commentsDB = await this.orbitdb.feed(postObject.payload.value.commentsFeed)
         await commentsDB.load()
-        return commentsDB.iterator({ limit: -1 }).collect()
+        return commentsDB.iterator({limit: -1}).collect()
     }
 
     /**
      * Comments a post
-     * @param post
-     * @param commentText text of the comment
-     * @param replyToCommentCid cid of the comment you want to reply
-     * @param options
+     * @param {*} postObject
+     * @param {string} commentText text of the comment
+     * @param {string} replyToCommentHash hash of the comment you want to reply
      * @returns {Promise<*>} cid
      */
-    async commentPost(post, commentText, replyToCommentCid=undefined, options = {}) {
-        const commentsDB = await this.orbitdb.counter(post.commentsFeed)
-        const commentData = {commentText:commentText, replyToCommentCid:replyToCommentCid}
-        return await commentsDB.add(commentData, options )
+    async commentPost(postObject, commentText, replyToCommentHash = undefined) {
+        const commentsDB = await this.orbitdb.feed(postObject.payload.value.commentsFeed)
+        const commentData = {
+            commentText: commentText,
+            replyToCommentCid: replyToCommentHash,
+            timestamp: this.getTimestamp(),
+        }
+        return await commentsDB.add(commentData)
     }
 
     /**
@@ -338,12 +348,12 @@ class Soveren {
      * @returns {Promise<string>}
      */
     async rePost(authorUid, postHash, remark) {
-        if (authorUid===this.getUid()) throw new Error('You can not re post your own posts')
+        if (authorUid === this.getUid()) throw new Error('You can not re post your own posts')
         const author = new Soveren(this.freedom)
         await author.create(authorUid)
         const post = await this.getPost(postHash)
         const isRePost = true
-        const rePostData = {...post, remark, isRePost, originalAuthor:post.author}
+        const rePostData = {...post, remark, isRePost, originalAuthor: post.author, timestamp: this.getTimestamp()}
         await this.addPost(rePostData)
         const counter = await this.orbitdb.counter(post.rePostsCounter)
         return await counter.inc()
@@ -375,13 +385,13 @@ class Soveren {
 }
 
 // try {
-    const IpfsLibrary = require('ipfs')
-    const OrbitDBLibrary = require('orbit-db')
-    const { uuid } = require('uuidv4');
+const IpfsLibrary = require('ipfs')
+const OrbitDBLibrary = require('orbit-db')
+const {uuid} = require('uuidv4');
 
-    const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
+const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
 
-    module.exports = exports = new Soveren(freedom)
+module.exports = exports = new Soveren(freedom)
 // } catch (e) {
 //     console.error(e.message)
 //     window.FW = new Soveren(window.Ipfs, window.OrbitDB)

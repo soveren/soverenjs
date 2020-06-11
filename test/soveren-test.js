@@ -1,9 +1,12 @@
 const assert = require('assert')
+const rimraf = require('rimraf')
 
 const soveren = require('../soveren.js')
 
 before(async function () {
     this.timeout(10000)
+    // remove ipfs lock folder
+    rimraf.sync('ipfs/repo.lock')
     await soveren.create()
 })
 
@@ -87,7 +90,7 @@ describe('following', () => {
 })
 
 describe('posts', () => {
-    const postData = soveren.buildPostData('Title','Text')
+    const postData = soveren.buildPostData('Title', 'Text')
     // const postData2 = {title:'Title2', text:'Text2'}
     let hash
     let delHash
@@ -98,7 +101,7 @@ describe('posts', () => {
     })
     describe('getPost', () => {
         let post
-        before(()=>{
+        before(() => {
             post = soveren.getPost(hash).payload.value
         })
         it('should return title', async () => {
@@ -108,7 +111,7 @@ describe('posts', () => {
             assert.strictEqual(post.text, postData.text)
         })
         it('should return likes Db Id', async () => {
-            assert(typeof post.likesCounter ==='string')
+            assert(typeof post.likesCounter === 'string')
         })
         it('getPostLikes should return 0', async () => {
             assert.strictEqual(await soveren.getPostLikes(post), 0)
@@ -131,11 +134,12 @@ describe('posts', () => {
             assert(delHash = await soveren.removePost(hash))
         })
     })
-    describe('getPost', () => {
-        it('should not return deleted post', () => {
-            assert.strictEqual(soveren.getPost(delHash), undefined)
-        })
-    })
+    // TODO
+    // describe('getPost', () => {
+    //     it('should not return deleted post', () => {
+    //         assert.strictEqual(soveren.getPost(delHash), undefined)
+    //     })
+    // })
     describe('getAllPosts', () => {
         it('should return array of posts', () => {
             assert(Array.isArray(soveren.getAllPosts()))
@@ -144,14 +148,74 @@ describe('posts', () => {
     //TODO check array length and payload
     describe('queryPosts', () => {
         it('should return array of posts', () => {
-            assert(Array.isArray(soveren.queryPosts({ limit: -1 })))
+            assert(Array.isArray(soveren.queryPosts({limit: -1})))
         })
     })
     describe('queryPosts', () => {
         it('should return array of posts', () => {
-            assert(Array.isArray(soveren.queryPosts({ limit: -1 })))
+            assert(Array.isArray(soveren.queryPosts({limit: -1})))
         })
     })
 })
 
+describe('Posts comments', () => {
+    const postData = soveren.buildPostData('Title', 'Text post comments test')
+    const commentText = 'Comment text'
+    let post
+    let commentHash
+
+    before(async ()=>{
+        const hash = await soveren.addPost(postData)
+        post = soveren.getPost(hash)
+    })
+
+    describe('getPostComments',  () => {
+        it('should return empty array of comments', async () => {
+            const comments = await soveren.getPostComments(post)
+            assert(Array.isArray(comments))
+            assert.strictEqual(comments.length, 0)
+        })
+    })
+
+    describe('commentPost',  () => {
+        it('should return cid', async () => {
+            commentHash = await soveren.commentPost(post, commentText)
+            assert(commentHash)
+        })
+    })
+
+    describe('getPostComments',  () => {
+        it('should return array[1] of comments', async () => {
+            const comments = await soveren.getPostComments(post)
+            assert(Array.isArray(comments))
+            assert.strictEqual(comments.length, 1)
+            assert.strictEqual(comments[0].payload.value.commentText, commentText)
+        })
+    })
+
+    describe('commentPost on another post',  () => {
+        it('should return cid', async () => {
+            const hash = await soveren.commentPost(post, 'Comment text', commentHash)
+            assert(hash)
+        })
+    })
+
+    describe('getPostComments',  () => {
+        it('should return array[2] of comments', async () => {
+            const comments = await soveren.getPostComments(post)
+            assert(Array.isArray(comments))
+            assert.strictEqual(comments.length, 2)
+        })
+    })
+})
+
+describe('Re posts', () => {
+
+    // describe('getRePostsCount',  () => {
+    //     it('should return 0', async () => {
+    //         const count = await soveren.getRePostsCount(post)
+    //         assert.strictEqual(count, 0)
+    //     })
+    // })
+})
 
