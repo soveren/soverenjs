@@ -76,7 +76,7 @@ class Soveren {
      * Creates and initializes Soveren node
      * @returns {Promise<Object>}
      */
-    async create () {
+    async create (uid=undefined) {
         try {
             await this.freedom.affirm()
             this.ipfs = this.freedom.ipfs
@@ -84,23 +84,37 @@ class Soveren {
             this.defaultDbOptions = this.freedom.defaultDbOptions
 
             const db = this.orbitdb
-            this.profile = await db.kvstore('profile', this.defaultDbOptions)
-            await this.profile.load()
+            if (uid) { // create for another user
 
-            this.following = await db.kvstore('following', this.defaultDbOptions)
-            await this.following.load()
+                this.profile = await db.kvstore(this.UidToDatabaseId(uid), this.defaultDbOptions)
+                await this.profile.load()
 
-            this.posts = await db.feed('posts', this.defaultDbOptions)
-            await this.posts.load()
+                this.following = await db.kvstore(this.getProfileField('following'), this.defaultDbOptions)
+                await this.following.load()
 
-            // Apply fixture data for new users
-            const peerInfo = await this.freedom.ipfs.id()
-            await this.loadFixtureData({
-                'username': 'User'+Math.floor(Math.random() * 1000000),
-                'following': this.following.id,
-                'posts': this.posts.id,
-                'nodeId': peerInfo.id
-            })
+                this.posts = await db.feed(this.getProfileField('posts'), this.defaultDbOptions)
+                await this.posts.load()
+
+            } else { // create for yourself
+
+                this.profile = await db.kvstore('profile', this.defaultDbOptions)
+                await this.profile.load()
+
+                this.following = await db.kvstore('following', this.defaultDbOptions)
+                await this.following.load()
+
+                this.posts = await db.feed('posts', this.defaultDbOptions)
+                await this.posts.load()
+
+                // Apply fixture data for new users
+                const peerInfo = await this.freedom.ipfs.id()
+                await this.loadFixtureData({
+                    'username': 'User' + Math.floor(Math.random() * 1000000),
+                    'following': this.following.id,
+                    'posts': this.posts.id,
+                    'nodeId': peerInfo.id
+                })
+            }
             return this
         } catch(e) {
             throw (e)
@@ -134,16 +148,12 @@ class Soveren {
     }
 
 
-    getProfileFields(uid=undefined) {
-        if (!uid) return this.profile.all // all own fields
-        //TODO get another profile by uid
-        throw new Error('Incomplete')
+    getProfileFields() {
+        return this.profile.all // all own fields
     }
 
-    getProfileField(key, uid=undefined) {
-        if (!uid) return this.profile.get(key) // own field
-        //TODO get another profile field by uid
-        throw new Error('Incomplete')
+    getProfileField(key) {
+        return this.profile.get(key) // own field
     }
 
     /**
@@ -215,10 +225,10 @@ class Soveren {
     /**
      * Adds a post
      * @param data post data - prepare it with buildPostData
-     * @param options
      * @returns {Promise<*>} cid
      */
-    async addPost(data, options = {}) {
+    async addPost(data) {
+        data.author = this.getUid()
         // add likes counter
         const likesDbName = 'likesCounter.' + uuid()
         const likesDb = await this.orbitdb.counter(likesDbName, this.defaultDbOptions)
@@ -322,20 +332,23 @@ class Soveren {
 
     /**
      *  Re posts other person's post to own feed
-     * @param uid user id
+     * @param authorUid user id
      * @param postHash Hash of the post to re-post
      * @param remark Your remark for post
      * @returns {Promise<string>}
      */
-    async rePost(uid, postHash, remark) {
-        if (uid===this.getUid()) throw new Error('You can not re post own posts')
-        //TODO
-        const post ={} // TODO read post
-        const rePost = {...post, remark}
-        await this.addPost(rePost)
+    async rePost(authorUid, postHash, remark) {
+        if (authorUid===this.getUid()) throw new Error('You can not re post your own posts')
+        const author = new Soveren(this.freedom)
+        await author.create(authorUid)
+        const post = await this.getPost(postHash)
+        const isRePost = true
+        const rePostData = {...post, remark, isRePost, originalAuthor:post.author}
+        await this.addPost(rePostData)
         const counter = await this.orbitdb.counter(post.rePostsCounter)
         return await counter.inc()
     }
+
     //TODO methods:
 
     //- messaging

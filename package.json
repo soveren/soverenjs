@@ -22,10 +22,11 @@
   "dependencies": {
     "@types/orbit-db": "git+https://github.com/orbitdb/orbit-db-types.git",
     "ipfs": "^0.44.0",
-    "mocha": "^7.2.0",
     "orbit-db": "^0.24.1"
   },
   "devDependencies": {
+    "mocha": "^7.2.0",
+    "nyc": "^15.1.0",
     "uuidv4": "^6.1.0"
   }
 }

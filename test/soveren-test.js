@@ -132,18 +132,23 @@ describe('posts', () => {
         })
     })
     describe('getPost', () => {
-        it('should not return deleted post', async () => {
+        it('should not return deleted post', () => {
             assert.strictEqual(soveren.getPost(delHash), undefined)
         })
     })
     describe('getAllPosts', () => {
-        it('should return array of posts', async () => {
+        it('should return array of posts', () => {
             assert(Array.isArray(soveren.getAllPosts()))
         })
     })
     //TODO check array length and payload
     describe('queryPosts', () => {
-        it('should return array of posts', async () => {
+        it('should return array of posts', () => {
+            assert(Array.isArray(soveren.queryPosts({ limit: -1 })))
+        })
+    })
+    describe('queryPosts', () => {
+        it('should return array of posts', () => {
             assert(Array.isArray(soveren.queryPosts({ limit: -1 })))
         })
     })
