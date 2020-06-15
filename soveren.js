@@ -1,5 +1,7 @@
 'use strict'
 
+
+
 class Freedom {
     /**
      * Constructs Freedom object
@@ -65,6 +67,18 @@ class Soveren {
         this.freedom = freedom
     }
 
+    uuid() { // Public Domain/MIT
+        let d = new Date().getTime();
+        if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
+            d += performance.now(); //use high-precision timer if available
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = (d + Math.random() * 16) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
     async loadFixtureData(fixtureData) {
         const fixtureKeys = Object.keys(fixtureData)
         for (let i in fixtureKeys) {
@@ -111,15 +125,15 @@ class Soveren {
                 this.posts = await db.feed('posts', this.defaultDbOptions)
                 await this.posts.load()
 
-                // Apply fixture data for new users
-                const peerInfo = await this.freedom.ipfs.id()
-                await this.loadFixtureData({
-                    'username': 'User' + Math.floor(Math.random() * 1000000),
-                    'following': this.following.id,
-                    'posts': this.posts.id,
-                    'nodeId': peerInfo.id,
-                })
             }
+            // Apply fixture data
+            const peerInfo = await this.freedom.ipfs.id()
+            await this.loadFixtureData({
+                'username': 'User' + Math.floor(Math.random() * 1000000),
+                'following': this.following.id,
+                'posts': this.posts.id,
+                'nodeId': peerInfo.id,
+            })
             return this
         } catch (e) {
             throw (e)
@@ -235,17 +249,17 @@ class Soveren {
     async addPost(data) {
         data.author = this.getUid()
         // add likes counter
-        const likesDbName = 'likesCounter.' + uuid()
+        const likesDbName = 'likesCounter.' + this.uuid()
         const likesDb = await this.orbitdb.counter(likesDbName, this.defaultDbOptions)
         data.likesCounter = likesDb.id
 
         // add re posts counter
-        const rePostsDbName = 'rePostsCounter.' + uuid()
+        const rePostsDbName = 'rePostsCounter.' + this.uuid()
         const rePostsDb = await this.orbitdb.counter(rePostsDbName, this.defaultDbOptions)
         data.rePostsCounter = rePostsDb.id
 
         // add comments feed
-        const commentsDbName = 'commentsFeed.' + uuid()
+        const commentsDbName = 'commentsFeed.' + this.uuid()
         const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultDbOptions)
         data.commentsFeed = commentsDb.id
 
@@ -384,15 +398,14 @@ class Soveren {
 
 }
 
-// try {
-const IpfsLibrary = require('ipfs')
-const OrbitDBLibrary = require('orbit-db')
-const {uuid} = require('uuidv4');
+try {
+    const IpfsLibrary = require('ipfs')
+    const OrbitDBLibrary = require('orbit-db')
 
-const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
+    const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
 
-module.exports = exports = new Soveren(freedom)
-// } catch (e) {
-//     console.error(e.message)
-//     window.FW = new Soveren(window.Ipfs, window.OrbitDB)
-// }
+    module.exports = exports = new Soveren(freedom)
+} catch (e) {
+    console.error(e.message)
+    window.FW = new Soveren(window.Ipfs, window.OrbitDB)
+}
