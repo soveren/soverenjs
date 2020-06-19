@@ -1,7 +1,5 @@
 'use strict'
 
-
-
 class Freedom {
     /**
      * Constructs Freedom object
@@ -125,6 +123,7 @@ class Soveren {
                 following: this.following.id,
                 posts: this.posts.id,
                 nodeId: peerInfo.id,
+                // publicKey: publicKey //TODO Generate key pair for messaging and DRM
             })
             return this
         } catch (e) {
@@ -230,7 +229,7 @@ class Soveren {
 
     /**
      * Gets all leaders - users that this user follows
-     * @returns {any[]}
+     * @returns {[]}
      */
     getFollowing() {
         return this.following.all
@@ -287,10 +286,19 @@ class Soveren {
         return this.posts.remove(hash)
     }
 
+    /**
+     * Gets a post
+     * @param hash
+     * @returns {LogEntry<any>}
+     */
     getPost(hash) {
         return this.posts.get(hash)
     }
 
+    /**
+     * Gets all posts
+     * @returns {LogEntry<any>[]}
+     */
     getAllPosts() {
         return this.posts.iterator({limit: -1}).collect()
     }
@@ -365,7 +373,7 @@ class Soveren {
     }
 
     /**
-     *  Re posts other person's post to own feed
+     * Re posts other person's post to own feed
      * @param authorUid user id
      * @param postHash Hash of the post to re-post
      * @param remark Your remark for post
@@ -377,7 +385,7 @@ class Soveren {
         await author.create(authorUid)
         const post = await this.getPost(postHash)
         const isRePost = true
-        const rePostData = {...post, remark, isRePost, originalAuthor: post.author, timestamp: this.getTimestamp()}
+        const rePostData = {...post, remark, isRePost, originalAuthor: post.author, originalPostHash: postHash}
         await this.addPost(rePostData)
         const counter = await this.orbitdb.counter(post.rePostsCounter)
         return await counter.inc()
@@ -392,19 +400,23 @@ class Soveren {
 
 
     //- shop
-    //addProduct(product)
-    //deleteProduct(pid)
+    //addProduct(productData)
+    //getProduct(pid)
+    //updateProduct(pid, productData)
     //buyProduct(pid)
-    //rateProduct(pid, rating)
-    //getProducts(uid)
-    //getOwnProducts()
+    //rateProduct(pid, rating) // must buy first
+    //getAllProducts(uid)
+    //deleteProduct(pid)
 
 
     //- donation
-    //donateUser(uid)
-    //donatePost(pid)
-    //getUserDonations(uid)
-    //getPostDonations(pid)
+    //donateUser(uid, postHash=null)
+
+    //- name service (possible separate library)
+    //registerNameService(nameService interface)
+    //resolveName(name) // returns uid
+
+    //- user autorization / verification
 
 }
 
