@@ -95,7 +95,12 @@ class Soveren {
      * Creates and initializes Soveren node
      * @returns {Promise<Object>}
      */
-    async create(uid = undefined) {
+    async create(uid) {
+        const
+            _profile = 'profile',
+            _following = 'following',
+            _posts = 'posts'
+
         try {
             await this.freedom.affirm()
             this.ipfs = this.freedom.ipfs
@@ -103,36 +108,23 @@ class Soveren {
             this.defaultDbOptions = this.freedom.defaultDbOptions
 
             const db = this.orbitdb
-            if (uid) { // create for another user
 
-                this.profile = await db.kvstore(this.UidToDatabaseId(uid), this.defaultDbOptions)
-                await this.profile.load()
+            this.profile = await db.kvstore(uid ? this.UidToDatabaseId(uid): _profile, this.defaultDbOptions)
+            await this.profile.load()
 
-                this.following = await db.kvstore(this.getProfileField('following'), this.defaultDbOptions)
-                await this.following.load()
+            this.following = await db.kvstore(uid ? this.getProfileField(_following) : _following, this.defaultDbOptions)
+            await this.following.load()
 
-                this.posts = await db.feed(this.getProfileField('posts'), this.defaultDbOptions)
-                await this.posts.load()
+            this.posts = await db.feed(uid ? this.getProfileField(_posts): _posts, this.defaultDbOptions)
+            await this.posts.load()
 
-            } else { // create for yourself
-
-                this.profile = await db.kvstore('profile', this.defaultDbOptions)
-                await this.profile.load()
-
-                this.following = await db.kvstore('following', this.defaultDbOptions)
-                await this.following.load()
-
-                this.posts = await db.feed('posts', this.defaultDbOptions)
-                await this.posts.load()
-
-            }
             // Apply fixture data
             const peerInfo = await this.freedom.ipfs.id()
             await this.loadFixtureData({
-                'username': 'User' + Math.floor(Math.random() * 1000000),
-                'following': this.following.id,
-                'posts': this.posts.id,
-                'nodeId': peerInfo.id,
+                username: 'User' + Math.floor(Math.random() * 1000000),
+                following: this.following.id,
+                posts: this.posts.id,
+                nodeId: peerInfo.id,
             })
             return this
         } catch (e) {
@@ -166,17 +158,25 @@ class Soveren {
         return databaseId.split('/')[2]
     }
 
-
+    /**
+     * Gets all profile fields values
+     * @returns {any[]}
+     */
     getProfileFields() {
-        return this.profile.all // all own fields
-    }
-
-    getProfileField(key) {
-        return this.profile.get(key) // own field
+        return this.profile.all
     }
 
     /**
-     *
+     * Gets profile field value
+     * @param key
+     * @returns {any}
+     */
+    getProfileField(key) {
+        return this.profile.get(key)
+    }
+
+    /**
+     * Sets profile field
      * @param key
      * @param value
      * @returns {Promise<*>} cid
@@ -185,6 +185,11 @@ class Soveren {
         return await this.profile.set(key, value)
     }
 
+    /**
+     * Sets few profile fields
+     * @param fields (object)
+     * @returns {Promise<{}>}
+     */
     async setProfileFields(fields) {
         const cids = {}
         for (let field of Object.keys(fields)) {
@@ -223,11 +228,16 @@ class Soveren {
         return await this.following.del(uid)
     }
 
+    /**
+     * Gets all leaders - users that this user follows
+     * @returns {any[]}
+     */
     getFollowing() {
         return this.following.all
     }
 
     // Posts
+
     /**
      * Builds post's data to use then with addPost
      * @param {string} title post title
