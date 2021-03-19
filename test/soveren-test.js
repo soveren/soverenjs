@@ -4,7 +4,7 @@ const rimraf = require('rimraf')
 const soveren = require('../soveren.js')
 
 before(async function () {
-    this.timeout(10000)
+    this.timeout(20000)
     // remove ipfs lock folder
     rimraf.sync('ipfs/repo.lock')
     await soveren.create()

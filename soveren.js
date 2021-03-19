@@ -33,7 +33,7 @@ class Freedom {
             // this.node.on('error', (e) => { throw (e) })
             // this.node.on('ready', this._init.bind(this))
 
-            await this.ipfs.start();
+            // await this.ipfs.start();
 
             this.orbitdb = await this.OrbitDB.createInstance(this.ipfs)
             this.defaultDbOptions = {write: [this.orbitdb.identity.id]}
@@ -57,25 +57,30 @@ class Freedom {
 }
 
 class Soveren {
+
     /**
      * Constructs Soveren object
      * @param freedom object
      */
-    constructor(freedom) {
+    constructor(freedom, uuid_fn) {
+
+        function simple_uuid_fn() { // Public Domain/MIT
+            let d = new Date().getTime();
+            if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
+                d += performance.now(); //use high-precision timer if available
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
         this.freedom = freedom
+        this.uuid = uuid_fn || simple_uuid_fn
     }
 
-    uuid() { // Public Domain/MIT
-        let d = new Date().getTime();
-        if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
-            d += performance.now(); //use high-precision timer if available
-        }
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            const r = (d + Math.random() * 16) % 16 | 0;
-            d = Math.floor(d / 16);
-            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-        });
-    }
+
 
     async loadFixtureData(fixtureData) {
         const fixtureKeys = Object.keys(fixtureData)
@@ -420,14 +425,16 @@ class Soveren {
 
 }
 
-try {
+try { // nodejs
     const IpfsLibrary = require('ipfs')
     const OrbitDBLibrary = require('orbit-db')
+    // const { v4: uuidv4 } = require('uuid')
 
     const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
 
     module.exports = exports = new Soveren(freedom)
-} catch (e) {
+} catch (e) { // browser
     console.error(e.message)
-    window.FW = new Soveren(window.Ipfs, window.OrbitDB)
+    // const freedom = new Freedom(window.Ipfs, window.OrbitDB)
+    // window.freedom = new Soveren(freedom)
 }
