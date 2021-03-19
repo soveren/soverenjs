@@ -1,12 +1,20 @@
 const assert = require('assert')
 const rimraf = require('rimraf')
 
-const soveren = require('../soveren.js')
+const IpfsLibrary = require('ipfs')
+const OrbitDBLibrary = require('orbit-db')
+const { v4: uuidv4 } = require('uuid')
+
+const {Freedom,Soveren} = require('../soveren.js')
+
+const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
+const soveren = new Soveren(freedom, uuidv4)
 
 before(async function () {
     this.timeout(20000)
     // remove ipfs lock folder
     rimraf.sync('ipfs/repo.lock')
+
     await soveren.create()
 })
 

@@ -61,6 +61,7 @@ class Soveren {
     /**
      * Constructs Soveren object
      * @param freedom object
+     * @param uuid_fn function
      */
     constructor(freedom, uuid_fn) {
 
@@ -195,11 +196,11 @@ class Soveren {
      * @returns {Promise<{}>}
      */
     async setProfileFields(fields) {
-        const cids = {}
+        const data = {}
         for (let field of Object.keys(fields)) {
-            cids[field] = await this.setProfileField(field, fields[field])
+            data[field] = await this.setProfileField(field, fields[field])
         }
-        return cids
+        return data
     }
 
     /**
@@ -366,16 +367,16 @@ class Soveren {
         return await commentsDB.add(commentData)
     }
 
-    /**
+/*    /!**
      * Returns number of re posts
      * @param post
      * @returns {Promise<number>}
-     */
+     *!/
     async getRePostsCount(post) {
         const counter = await this.orbitdb.counter(post.rePostsCounter)
         await counter.load()
         return counter.value
-    }
+    }*/
 
     /**
      * Re posts other person's post to own feed
@@ -421,20 +422,21 @@ class Soveren {
     //registerNameService(nameService interface)
     //resolveName(name) // returns uid
 
-    //- user autorization / verification
+    //- user authorization / verification
 
 }
 
-try { // nodejs
-    const IpfsLibrary = require('ipfs')
-    const OrbitDBLibrary = require('orbit-db')
-    const { v4: uuidv4 } = require('uuid')
+// try { // nodejs
+//     const IpfsLibrary = require('ipfs')
+//     const OrbitDBLibrary = require('orbit-db')
+//     const { v4: uuidv4 } = require('uuid')
+//
+//     const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
 
-    const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
-
-    module.exports = exports = new Soveren(freedom, uuidv4)
-} catch (e) { // browser
-    console.error(e.message)
-    const freedom = new Freedom(window.Ipfs, window.OrbitDB)
-    window.freedom = new Soveren(freedom)
-}
+    // module.exports = exports = new Soveren(freedom, uuidv4)
+    module.exports = exports = { Freedom, Soveren}
+// } catch (e) { // browser
+//     console.error(e.message)
+//     const freedom = new Freedom(window.Ipfs, window.OrbitDB)
+//     window.soveren = new Soveren(freedom)
+// }
