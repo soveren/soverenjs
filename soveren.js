@@ -428,13 +428,13 @@ class Soveren {
 try { // nodejs
     const IpfsLibrary = require('ipfs')
     const OrbitDBLibrary = require('orbit-db')
-    // const { v4: uuidv4 } = require('uuid')
+    const { v4: uuidv4 } = require('uuid')
 
     const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
 
-    module.exports = exports = new Soveren(freedom)
+    module.exports = exports = new Soveren(freedom, uuidv4)
 } catch (e) { // browser
     console.error(e.message)
-    // const freedom = new Freedom(window.Ipfs, window.OrbitDB)
-    // window.freedom = new Soveren(freedom)
+    const freedom = new Freedom(window.Ipfs, window.OrbitDB)
+    window.freedom = new Soveren(freedom)
 }
