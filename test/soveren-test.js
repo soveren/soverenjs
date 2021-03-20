@@ -5,10 +5,10 @@ const IpfsLibrary = require('ipfs')
 const OrbitDBLibrary = require('orbit-db')
 const { v4: uuidv4 } = require('uuid')
 
-const {Freedom,Soveren} = require('../soveren.js')
+const {Freedom,Store} = require('../soveren.js')
 
-const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
-const soveren = new Soveren(freedom, uuidv4)
+const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary, uuidv4)
+const soveren = new Store(freedom)
 
 before(async function () {
     this.timeout(20000)

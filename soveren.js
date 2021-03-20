@@ -2,15 +2,30 @@
 
 class Freedom {
     /**
-     * Constructs Freedom object
+     * Constructs object
      * @param IPFS
      * @param OrbitDB
      * @param ipfsRepo path to the local IPFS repository
+     * @param uuid_fn function
      */
-    constructor(IPFS, OrbitDB, ipfsRepo = './ipfs') {
+    constructor(IPFS, OrbitDB, uuid_fn, ipfsRepo = './ipfs') {
         this.IPFS = IPFS
         this.OrbitDB = OrbitDB
         this.ipfsRepo = ipfsRepo
+
+        function simple_uuid_fn() { // Public Domain/MIT
+            let d = new Date().getTime();
+            if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
+                d += performance.now(); //use high-precision timer if available
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
+        this.uuid = uuid_fn || simple_uuid_fn
     }
 
     /**
@@ -56,31 +71,15 @@ class Freedom {
 
 }
 
-class Soveren {
+class Store {
 
     /**
-     * Constructs Soveren object
+     * Constructs Store object
      * @param freedom object
-     * @param uuid_fn function
      */
-    constructor(freedom, uuid_fn) {
-
-        function simple_uuid_fn() { // Public Domain/MIT
-            let d = new Date().getTime();
-            if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
-                d += performance.now(); //use high-precision timer if available
-            }
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                const r = (d + Math.random() * 16) % 16 | 0;
-                d = Math.floor(d / 16);
-                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-            });
-        }
-
+    constructor(freedom) {
         this.freedom = freedom
-        this.uuid = uuid_fn || simple_uuid_fn
     }
-
 
 
     async loadFixtureData(fixtureData) {
@@ -168,7 +167,7 @@ class Soveren {
      * @returns {any[]}
      */
     getProfileFields() {
-        return this.profile.all
+        return {...this.profile.all}
     }
 
     /**
@@ -264,17 +263,17 @@ class Soveren {
     async addPost(data) {
         data.author = this.getUid()
         // add likes counter
-        const likesDbName = 'likesCounter.' + this.uuid()
+        const likesDbName = 'likesCounter.' + this.freedom.uuid()
         const likesDb = await this.orbitdb.counter(likesDbName, this.defaultDbOptions)
         data.likesCounter = likesDb.id
 
         // add re posts counter
-        const rePostsDbName = 'rePostsCounter.' + this.uuid()
+        const rePostsDbName = 'rePostsCounter.' + this.freedom.uuid()
         const rePostsDb = await this.orbitdb.counter(rePostsDbName, this.defaultDbOptions)
         data.rePostsCounter = rePostsDb.id
 
         // add comments feed
-        const commentsDbName = 'commentsFeed.' + this.uuid()
+        const commentsDbName = 'commentsFeed.' + this.freedom.uuid()
         const commentsDb = await this.orbitdb.feed(commentsDbName, this.defaultDbOptions)
         data.commentsFeed = commentsDb.id
 
@@ -387,7 +386,7 @@ class Soveren {
      */
     async rePost(authorUid, postHash, remark) {
         if (authorUid === this.getUid()) throw new Error('You can not re post your own posts')
-        const author = new Soveren(this.freedom)
+        const author = new Store(this.freedom)
         await author.create(authorUid)
         const post = await this.getPost(postHash)
         const isRePost = true
@@ -434,7 +433,9 @@ class Soveren {
 //     const freedom = new Freedom(IpfsLibrary, OrbitDBLibrary)
 
     // module.exports = exports = new Soveren(freedom, uuidv4)
-    module.exports = exports = { Freedom, Soveren}
+    const Soveren = { Freedom, Store }
+    window.Soveren = Soveren
+    module.exports = exports = Soveren
 // } catch (e) { // browser
 //     console.error(e.message)
 //     const freedom = new Freedom(window.Ipfs, window.OrbitDB)
