@@ -434,8 +434,8 @@ class Store {
 
     // module.exports = exports = new Soveren(freedom, uuidv4)
     const Soveren = { Freedom, Store }
-    window.Soveren = Soveren
-    module.exports = exports = Soveren
+    // if (window) window.Soveren = Soveren
+    if (module) module.exports = exports = Soveren
 // } catch (e) { // browser
 //     console.error(e.message)
 //     const freedom = new Freedom(window.Ipfs, window.OrbitDB)
