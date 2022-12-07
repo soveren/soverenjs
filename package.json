@@ -21,7 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "@types/orbit-db": "git+https://github.com/orbitdb/orbit-db-types.git",
-    "ipfs": "^0.54.4",
+    "ipfs": "^0.65.0",
     "orbit-db": "^0.26.1",
     "uuid": "^8.3.2"
   },
